@@ -15,24 +15,29 @@ TARGET_ACCOUNT = "اسم_الحساب_الذي_تتابعه"
 TELEGRAM_BOT_TOKEN = "توكن_بوت_تليجرام"
 TELEGRAM_USER_ID = 123456789  # رقم الآيدي الخاص بك
 
+# إنشاء البوت
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
+# إرسال رسالة إلى تليجرام
 def send_telegram_message(text):
     try:
         bot.send_message(chat_id=TELEGRAM_USER_ID, text=text)
     except Exception as e:
         print("❌ خطأ في إرسال رسالة تليجرام:", e)
 
+# حفظ الكوكيز بعد تسجيل الدخول
 def save_cookies(driver, path):
     with open(path, 'w') as file:
         json.dump(driver.get_cookies(), file)
 
+# تحميل الكوكيز عند التشغيل
 def load_cookies(driver, path):
     with open(path, 'r') as file:
         cookies = json.load(file)
         for cookie in cookies:
             driver.add_cookie(cookie)
 
+# تسجيل الدخول إلى تويتر
 def login_to_twitter(driver):
     driver.get("https://x.com/login")
     time.sleep(5)
@@ -43,11 +48,13 @@ def login_to_twitter(driver):
     save_cookies(driver, "cookies.json")
     print("✅ تم تسجيل الدخول وحفظ الكوكيز")
 
+# التحقق من أنك مسجل دخول فعليًا
 def is_logged_in(driver):
     driver.get("https://x.com/home")
     time.sleep(5)
     return "login" not in driver.current_url.lower()
 
+# الحصول على رابط أحدث تغريدة
 def get_latest_tweet_url(driver):
     driver.get(f"https://x.com/{TARGET_ACCOUNT}")
     time.sleep(5)
@@ -55,6 +62,7 @@ def get_latest_tweet_url(driver):
     link = tweet.find_element(By.XPATH, ".//a[contains(@href, '/status/')]")
     return link.get_attribute("href")
 
+# عمل لايك وريتويت
 def like_and_retweet(driver):
     try:
         like_button = driver.find_element(By.XPATH, '//div[@data-testid="like"]')
@@ -74,16 +82,19 @@ def like_and_retweet(driver):
     except:
         print("❌ لا يمكن الضغط على ريتويت (ربما تم ريتويت سابقًا)")
 
+# حفظ آخر تغريدة تمت معالجتها
+def save_last_tweet(url):
+    with open("last_tweet.txt", "w") as f:
+        f.write(url)
+
+# تحميل آخر تغريدة محفوظة
 def load_last_tweet():
     if os.path.exists("last_tweet.txt"):
         with open("last_tweet.txt", "r") as f:
             return f.read().strip()
     return ""
 
-def save_last_tweet(url):
-    with open("last_tweet.txt", "w") as f:
-        f.write(url)
-
+# الدالة الرئيسية
 def main():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # إزالة هذا السطر لو تبي تشوف المتصفح
@@ -94,6 +105,8 @@ def main():
     driver = webdriver.Chrome(options=options)
 
     try:
+        print("▶ البوت بدأ الآن ويعمل بشكل مستمر ...")
+
         # محاولة تسجيل الدخول باستخدام الكوكيز
         if os.path.exists("cookies.json"):
             driver.get("https://x.com/")
@@ -124,8 +137,8 @@ def main():
     finally:
         driver.quit()
 
-# تشغيل كل دقيقة مثلًا (ممكن تستخدم cronjob في الاستضافة)
+# تكرار التشغيل كل 60 ثانية
 if __name__ == "__main__":
     while True:
         main()
-        time.sleep(60)  # انتظر دقيقة، ثم كرر
+        time.sleep(60)
